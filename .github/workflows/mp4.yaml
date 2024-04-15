@@ -14,7 +14,7 @@ jobs:
   download:
     runs-on: ubuntu-latest
     steps:
-      - run: apt install -y ffmpeg wget
+      - run: sudo apt install -y ffmpeg wget
       - run: wget -O  ${{ github.event.inputs.name }}.mp4 ${{ github.event.inputs.url }}
       - run: ls -lah
       - run: "ffmpeg -i  ${{ github.event.inputs.name }}.mp4 -codec: copy -start_number 0 -hls_time 10 -hls_list_size 0 -f hls  ${{ github.event.inputs.name }}.m3u8"
