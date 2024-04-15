@@ -19,3 +19,4 @@ jobs:
       - run: ls -lah
       - run: "ffmpeg -i  ${{ github.event.inputs.name }}.mp4 -codec: copy -start_number 0 -hls_time 10 -hls_list_size 0 -f hls  ${{ github.event.inputs.name }}.m3u8"
       - run: ls -lah
+      - run: find . *.m3u8
