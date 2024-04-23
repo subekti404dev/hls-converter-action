@@ -21,4 +21,6 @@ jobs:
       - run: ls -lah
       - run: |
           m3u8_file=$(find "./" -maxdepth 1 -type f -name '*.m3u8')
-          echo "m3u8_file"
+          echo "$m3u8_file"
+          cat "$m3u8_file"
+          
