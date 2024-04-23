@@ -20,7 +20,42 @@ jobs:
       - run: "ffmpeg -i  ${{ github.event.inputs.name }}.mp4 -codec: copy -start_number 0 -hls_time 10 -hls_list_size 0 -f hls  ${{ github.event.inputs.name }}.m3u8"
       - run: ls -lah
       - run: |
-          m3u8_file=$(find "./" -maxdepth 1 -type f -name '*.m3u8')
-          echo "$m3u8_file"
-          cat "$m3u8_file"
+          bot_token="${{ secrets.TG_BOT_TOKEN }}"
+          chat_id="${{ secrets.TG_CHAT_ID }}"
+          folder_path="./"
+          m3u8_file="${{ github.event.inputs.name }}.m3u8"
           
+          # Upload each .ts file
+          for ts_file in "${folder_path}"*.ts; do
+              file_id=$(curl -s --location "https://api.telegram.org/bot${bot_token}/sendDocument" \
+                  --form "chat_id=${chat_id}" \
+                  --form "document=@\"${ts_file}\"" | jq -r '.result.document.file_id')
+          
+              # Get file path
+              file_path=$(curl -s --location "https://api.telegram.org/bot${bot_token}/getFile?file_id=${file_id}" | jq -r '.result.file_path')
+          
+              # Generate direct link
+              direct_link="https://api.telegram.org/file/bot${bot_token}/${file_path}"
+          
+              # Replace .ts file name with direct link in the .m3u8 file
+              sed -i "s|$(basename "${ts_file}")|${direct_link}|g" "${m3u8_file}"
+          done
+          
+          echo "Upload and link replacement completed."
+          
+      - run: |
+          bot_token="${{ secrets.TG_BOT_TOKEN }}"
+          chat_id="${{ secrets.TG_CHAT_ID }}"
+          m3u8_file="${{ github.event.inputs.name }}.m3u8"
+          
+          file_id=$(curl -s --location "https://api.telegram.org/bot${bot_token}/sendDocument" \
+                  --form "chat_id=${chat_id}" \
+                  --form "document=@\"${m3u8_file}\"" | jq -r '.result.document.file_id')
+          
+          # Get file path
+          file_path=$(curl -s --location "https://api.telegram.org/bot${bot_token}/getFile?file_id=${file_id}" | jq -r '.result.file_path')
+      
+          # Generate direct link
+          direct_link="https://api.telegram.org/file/bot${bot_token}/${file_path}"
+      
+          echo "${direct_link}"        
