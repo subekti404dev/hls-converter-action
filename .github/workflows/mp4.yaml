@@ -27,6 +27,7 @@ jobs:
           
           # Upload each .ts file
           for ts_file in "${folder_path}"*.ts; do
+            (  
               file_id=$(curl -s --location "https://api.telegram.org/bot${bot_token}/sendDocument" \
                   --form "chat_id=${chat_id}" \
                   --form "document=@\"${ts_file}\"" | jq -r '.result.document.file_id')
@@ -39,7 +40,11 @@ jobs:
           
               # Replace .ts file name with direct link in the .m3u8 file
               sed -i "s|$(basename "${ts_file}")|${direct_link}|g" "${m3u8_file}"
+            ) &
           done
+          
+          # Wait for all background processes to finish
+          wait
           
           echo "Upload and link replacement completed."
           
