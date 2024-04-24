@@ -26,21 +26,24 @@ jobs:
           
           # Upload each .ts file
           for ts_file in "${folder_path}"*.ts; do
+            ( 
               direct_link=$(curl -s --location "${webhook_url}" \
                   --form "file=@\"${ts_file}\"" | jq -r '.attachments[0].url')
           
               # Replace .ts file name with direct link in the .m3u8 file
               sed -i "s|$(basename "${ts_file}")|${direct_link}|g" "${m3u8_file}"
+            ) &
+            echo "${ts_file} queued"
           done
+
+          wait
           
           echo "Upload and link replacement completed."
           
       - run: |
           webhook_url="${{ secrets.DISCORD_WEBHOOK_URL }}"
-          folder_path="./"
           m3u8_file="${{ github.event.inputs.name }}.m3u8"
           
-          direct_link=$(curl -s --location "${webhook_url}" \
-                  --form "file=@\"${m3u8_file}\"" | jq -r '.attachments[0].url')
+          direct_link=$(curl --location "${webhook_url}" --form "file=@\"${m3u8_file}\"" | jq -r '.attachments[0].url')
       
-          echo "${direct_link}"        
+          echo "Done : ${direct_link}"
