@@ -1,0 +1,51 @@
+name: mp4 Transcode discord
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'mp4 file URL'
+        required: true
+      
+      name:
+        description: 'mp4 file name'
+        required: true
+        
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - run: sudo apt install -y ffmpeg wget
+      - run: wget -O  ${{ github.event.inputs.name }}.mp4 ${{ github.event.inputs.url }}
+      - run: ls -lah
+      - run: "ffmpeg -i  ${{ github.event.inputs.name }}.mp4 -codec: copy -start_number 0 -hls_time 10 -hls_list_size 0 -f hls  ${{ github.event.inputs.name }}.m3u8"
+      - run: ls -lah
+      - run: |
+          webhook_url="${{ secrets.DISCORD_WEBHOOK_URL }}"
+          folder_path="./"
+          m3u8_file="${{ github.event.inputs.name }}.m3u8"
+          
+          # Upload each .ts file
+          for ts_file in "${folder_path}"*.ts; do
+            (  
+              direct_link=$(curl -s --location "${webhook_url}" \
+                  --form "document=@\"${ts_file}\"" | jq -r '.attachments.[0].url')
+          
+              # Replace .ts file name with direct link in the .m3u8 file
+              sed -i "s|$(basename "${ts_file}")|${direct_link}|g" "${m3u8_file}"
+            ) &
+          done
+          
+          # Wait for all background processes to finish
+          wait
+          
+          echo "Upload and link replacement completed."
+          
+      - run: |
+          webhook_url="${{ secrets.DISCORD_WEBHOOK_URL }}"
+          folder_path="./"
+          m3u8_file="${{ github.event.inputs.name }}.m3u8"
+          
+          direct_link=$(curl -s --location "${webhook_url}" \
+                  --form "document=@\"${m3u8_file}\"" | jq -r '.attachments.[0].url')
+      
+          echo "${direct_link}"        
