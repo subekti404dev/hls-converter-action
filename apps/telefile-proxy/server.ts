@@ -3,6 +3,22 @@ import { serve } from "bun";
 const PORT = process.env.PORT || 8088;
 const BASE_URL = "https://api.telegram.org";
 const TOKEN = process.env.TOKEN || "";
+const TTL = parseInt(process.env.TTL || "60") // in minutes
+
+let caches: any = [];
+
+const findCacheById = (id: string) => {
+  const cache = caches.find((c: any) => c.id === id);
+  if (cache) {
+    const now = new Date();
+    const differenceMs = Math.abs(
+      now.getTime() - (cache.date as Date).getTime()
+    );
+    const differenceMinutes = differenceMs / (1000 * 60);
+    if (differenceMinutes < TTL) return cache;
+  }
+  return null;
+};
 
 serve({
   port: PORT,
@@ -16,13 +32,29 @@ serve({
         const id = pathname.split("/")[2];
         if (!id) throw new Error("Invalid ID");
 
-        const resp1 = await fetch(
-          `${BASE_URL}/bot${TOKEN}/getFile?file_id=${id}`
-        );
-        if (!resp1.ok) throw new Error("Failed to fetch file info");
+        let filePath;
 
-        const resp1Json: any = await resp1.json();
-        const filePath = resp1Json.result && resp1Json.result.file_path;
+        const cache = findCacheById(id);
+        if (cache) {
+            console.log('from cache');
+            
+            filePath = cache.path;
+        } else {
+            console.log('from api');
+          const resp1 = await fetch(
+            `${BASE_URL}/bot${TOKEN}/getFile?file_id=${id}`
+          );
+          if (!resp1.ok) throw new Error("Failed to fetch file info");
+
+          const resp1Json: any = await resp1.json();
+          filePath = resp1Json.result && resp1Json.result.file_path;
+          const cache = {
+            id,
+            path: filePath,
+            date: new Date(),
+          };
+          caches = [...caches.filter((c: any) => c.id !== id), cache];
+        }
         if (!filePath) throw new Error("File path not found");
 
         const resp2 = await fetch(`${BASE_URL}/file/bot${TOKEN}/${filePath}`);
