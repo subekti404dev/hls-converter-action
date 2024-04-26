@@ -3,7 +3,7 @@ import { serve } from "bun";
 const PORT = process.env.PORT || 8088;
 const BASE_URL = "https://api.telegram.org";
 const TOKEN =
-  process.env.TOKEN || "6802867045:AAFeEtNpltFcRvVI3B07MuTwum6NjaYohOA";
+  process.env.TOKEN || "";
 
 serve({
   port: PORT,
