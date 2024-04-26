@@ -1,0 +1,16 @@
+name: Build Telefile Proxy
+on:
+  workflow_dispatch:
+        
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsSL https://bun.sh/install | bash
+      - uses: actions/checkout@v4
+      - run: |
+          cd apps/telefile-proxy
+          bun install
+          bun build --compile --minify server.ts --outfile=server
+      - run: ls -lah
+      
