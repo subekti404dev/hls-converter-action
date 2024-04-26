@@ -3,7 +3,7 @@ import { serve } from "bun";
 const PORT = process.env.PORT || 8088;
 const BASE_URL = "https://api.telegram.org";
 const TOKEN = process.env.TOKEN || "";
-const TTL = parseInt(process.env.TTL || "60") // in minutes
+const TTL = parseInt(process.env.TTL || "60"); // in minutes
 
 let caches: any = [];
 
@@ -36,11 +36,8 @@ serve({
 
         const cache = findCacheById(id);
         if (cache) {
-            console.log('from cache');
-            
-            filePath = cache.path;
+          filePath = cache.path;
         } else {
-            console.log('from api');
           const resp1 = await fetch(
             `${BASE_URL}/bot${TOKEN}/getFile?file_id=${id}`
           );
