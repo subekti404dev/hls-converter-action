@@ -17,7 +17,7 @@ jobs:
       - run: sudo apt install -y ffmpeg wget
       - run: wget -O  ${{ github.event.inputs.name }}.mp4 ${{ github.event.inputs.url }}
       - run: ls -lah
-      - run: "ffmpeg -i  ${{ github.event.inputs.name }}.mp4 -codec: copy -start_number 0 -hls_time 10 -hls_list_size 0 -f hls  ${{ github.event.inputs.name }}.m3u8"
+      - run: "ffmpeg -i  ${{ github.event.inputs.name }}.mp4 -codec: copy -start_number 0 -hls_time 4 -hls_segment_size 500000 -hls_list_size 0 -f hls  ${{ github.event.inputs.name }}.m3u8"
       - run: ls -lah
       - run: |
           bot_token="${{ secrets.TG_BOT_TOKEN }}"
